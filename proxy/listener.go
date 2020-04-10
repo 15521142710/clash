@@ -5,14 +5,10 @@ import (
 	"net"
 	"strconv"
 
-	"github.com/brobird/clash/component/resolver"
-	"github.com/brobird/clash/config"
-	"github.com/brobird/clash/dns"
-
+	"github.com/brobird/clash/log"
 	"github.com/brobird/clash/proxy/http"
 	"github.com/brobird/clash/proxy/redir"
 	"github.com/brobird/clash/proxy/socks"
-	"github.com/brobird/clash/proxy/tun"
 )
 
 var (
@@ -23,7 +19,7 @@ var (
 	socksUDPListener *socks.SockUDPListener
 	httpListener     *http.HttpListener
 	redirListener    *redir.RedirListener
-	tunAdapter       tun.TunAdapter
+	redirUDPListener *redir.RedirUDPListener
 )
 
 type listener interface {
@@ -148,6 +144,14 @@ func ReCreateRedir(port int) error {
 		redirListener = nil
 	}
 
+	if redirUDPListener != nil {
+		if redirUDPListener.Address() == addr {
+			return nil
+		}
+		redirUDPListener.Close()
+		redirUDPListener = nil
+	}
+
 	if portIsZero(addr) {
 		return nil
 	}
@@ -156,6 +160,11 @@ func ReCreateRedir(port int) error {
 	redirListener, err = redir.NewRedirProxy(addr)
 	if err != nil {
 		return err
+	}
+
+	redirUDPListener, err = redir.NewRedirUDPProxy(addr)
+	if err != nil {
+		log.Warnln("Failed to start Redir UDP Listener: %s", err)
 	}
 
 	return nil
