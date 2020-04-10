@@ -19,7 +19,6 @@ const (
 	HTTPCONNECT
 	SOCKS
 	REDIR
-	TUN
 )
 
 type NetWork int
@@ -47,8 +46,6 @@ func (t Type) String() string {
 		return "Socks5"
 	case REDIR:
 		return "Redir"
-	case TUN:
-		return "Tun"
 	default:
 		return "Unknown"
 	}

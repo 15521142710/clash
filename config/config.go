@@ -22,13 +22,11 @@ import (
 
 	yaml "gopkg.in/yaml.v2"
 )
-
 // General config
 type General struct {
 	Port               int          `json:"port"`
 	SocksPort          int          `json:"socks-port"`
 	RedirPort          int          `json:"redir-port"`
-	Tun                Tun          `json:"tun"`
 	Authentication     []string     `json:"authentication"`
 	AllowLan           bool         `json:"allow-lan"`
 	BindAddress        string       `json:"bind-address"`
@@ -58,13 +56,6 @@ type FallbackFilter struct {
 	IPCIDR []*net.IPNet `yaml:"ipcidr"`
 }
 
-// Tun config
-type Tun struct {
-	Enable    bool   `yaml:"enable" json:"enable"`
-	DeviceURL string `yaml:"device-url" json:"device-url"`
-	DNSListen string `yaml:"dns-listen" json:"dns-listen"`
-}
-
 // Experimental config
 type Experimental struct {
 	IgnoreResolveFail bool   `yaml:"ignore-resolve-fail"`
@@ -74,7 +65,6 @@ type Experimental struct {
 // Config is clash config manager
 type Config struct {
 	General      *General
-	Tun          *Tun
 	DNS          *DNS
 	Experimental *Experimental
 	Hosts        *trie.Trie
@@ -118,7 +108,6 @@ type RawConfig struct {
 	ProxyProvider map[string]map[string]interface{} `yaml:"proxy-providers"`
 	Hosts         map[string]string                 `yaml:"hosts"`
 	DNS           RawDNS                            `yaml:"dns"`
-    Tun           Tun                               `yaml:"tun"`
 	Experimental  Experimental                      `yaml:"experimental"`
 	Proxy         []map[string]interface{}          `yaml:"proxies"`
 	ProxyGroup    []map[string]interface{}          `yaml:"proxy-groups"`
@@ -153,11 +142,6 @@ func UnmarshalRawConfig(buf []byte) (*RawConfig, error) {
 		Rule:           []string{},
 		Proxy:          []map[string]interface{}{},
 		ProxyGroup:     []map[string]interface{}{},
-		Tun: Tun{
-			Enable:    false,
-			DeviceURL: "dev://clash0",
-			DNSListen: "",
-		},
 		Experimental: Experimental{
 			IgnoreResolveFail: true,
 		},
@@ -232,7 +216,6 @@ func parseGeneral(cfg *RawConfig) (*General, error) {
 	port := cfg.Port
 	socksPort := cfg.SocksPort
 	redirPort := cfg.RedirPort
-	tun := cfg.Tun
 	allowLan := cfg.AllowLan
 	bindAddress := cfg.BindAddress
 	externalController := cfg.ExternalController
@@ -253,7 +236,6 @@ func parseGeneral(cfg *RawConfig) (*General, error) {
 		Port:               port,
 		SocksPort:          socksPort,
 		RedirPort:          redirPort,
-		Tun:                tun,
 		AllowLan:           allowLan,
 		BindAddress:        bindAddress,
 		Mode:               mode,

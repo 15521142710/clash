@@ -26,7 +26,6 @@ type configSchema struct {
 	Port        *int               `json:"port"`
 	SocksPort   *int               `json:"socks-port"`
 	RedirPort   *int               `json:"redir-port"`
-	Tun         *config.Tun        `json:"tun"`
 	AllowLan    *bool              `json:"allow-lan"`
 	BindAddress *string            `json:"bind-address"`
 	Mode        *tunnel.TunnelMode `json:"mode"`
@@ -50,6 +49,7 @@ func patchConfigs(w http.ResponseWriter, r *http.Request) {
 	general := &configSchema{}
 	if err := render.DecodeJSON(r.Body, general); err != nil {
 		render.Status(r, http.StatusBadRequest)
+		render.JSON(w, r, ErrBadRequest)
 		return
 	}
 
@@ -65,13 +65,6 @@ func patchConfigs(w http.ResponseWriter, r *http.Request) {
 	P.ReCreateHTTP(pointerOrDefault(general.Port, ports.Port))
 	P.ReCreateSocks(pointerOrDefault(general.SocksPort, ports.SocksPort))
 	P.ReCreateRedir(pointerOrDefault(general.RedirPort, ports.RedirPort))
-	if general.Tun != nil {
-		if err := P.ReCreateTun(*general.Tun); err != nil {
-			render.Status(r, http.StatusBadRequest)
-			render.JSON(w, r, newError(err.Error()))
-			return
-		}
-	}
 
 	if general.Mode != nil {
 		tunnel.SetMode(*general.Mode)
@@ -93,6 +86,7 @@ func updateConfigs(w http.ResponseWriter, r *http.Request) {
 	req := updateConfigRequest{}
 	if err := render.DecodeJSON(r.Body, &req); err != nil {
 		render.Status(r, http.StatusBadRequest)
+		render.JSON(w, r, ErrBadRequest)
 		return
 	}
 
@@ -104,17 +98,20 @@ func updateConfigs(w http.ResponseWriter, r *http.Request) {
 		cfg, err = executor.ParseWithBytes([]byte(req.Payload))
 		if err != nil {
 			render.Status(r, http.StatusBadRequest)
+			render.JSON(w, r, newError(err.Error()))
 			return
 		}
 	} else {
 		if !filepath.IsAbs(req.Path) {
 			render.Status(r, http.StatusBadRequest)
+			render.JSON(w, r, newError("path is not a absoluted path"))
 			return
 		}
 
 		cfg, err = executor.ParseWithPath(req.Path)
 		if err != nil {
 			render.Status(r, http.StatusBadRequest)
+			render.JSON(w, r, newError(err.Error()))
 			return
 		}
 	}
