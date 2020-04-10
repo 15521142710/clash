@@ -45,17 +45,6 @@ func SetAllowLan(al bool) {
 	allowLan = al
 }
 
-func Tun() config.Tun {
-	if tunAdapter == nil {
-		return config.Tun{}
-	}
-	return config.Tun{
-		Enable:    true,
-		DeviceURL: tunAdapter.DeviceURL(),
-		DNSListen: tunAdapter.DNSListen(),
-	}
-}
-
 func SetBindAddress(host string) {
 	bindAddress = host
 }
@@ -167,31 +156,6 @@ func ReCreateRedir(port int) error {
 		log.Warnln("Failed to start Redir UDP Listener: %s", err)
 	}
 
-	return nil
-}
-
-func ReCreateTun(conf config.Tun) error {
-	enable := conf.Enable
-	url := conf.DeviceURL
-	if tunAdapter != nil {
-		if enable && (url == "" || url == tunAdapter.DeviceURL()) {
-			// Though we don't need to recreate tun device, we should update tun DNSServer
-			return tunAdapter.ReCreateDNSServer(resolver.DefaultResolver.(*dns.Resolver), conf.DNSListen)
-		}
-		tunAdapter.Close()
-		tunAdapter = nil
-	}
-	if !enable {
-		return nil
-	}
-	var err error
-	tunAdapter, err = tun.NewTunProxy(url)
-	if err != nil {
-		return err
-	}
-	if resolver.DefaultResolver != nil {
-		return tunAdapter.ReCreateDNSServer(resolver.DefaultResolver.(*dns.Resolver), conf.DNSListen)
-	}
 	return nil
 }
 
