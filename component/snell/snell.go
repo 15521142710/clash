@@ -8,7 +8,7 @@ import (
 	"net"
 	"sync"
 
-	"github.com/brobird/go-shadowsocks2/shadowaead"
+	"github.com/Dreamacro/go-shadowsocks2/shadowaead"
 	"golang.org/x/crypto/chacha20poly1305"
 )
 
