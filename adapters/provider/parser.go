@@ -3,7 +3,6 @@ package provider
 import (
 	"errors"
 	"fmt"
-	"path/filepath"
 	"time"
 
 	"github.com/brobird/clash/common/structure"
